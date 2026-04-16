@@ -2,15 +2,159 @@
     <head>
         <link rel="stylesheet" href="styles.css">
         <title>0xFF + 0xA</title>
+        <style>
+            #flash {
+                position: fixed;
+                inset: 0;
+                background: white;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.4s ease;
+            }
+        </style>
     </head>
     <body>
+        <div id="flash"></div>
+
         <h1 title="Because the Reverse Polish Notation ROCKS!">
-            <span id="number">
-                0xFF + 0xA
-            </span>
-            <span id="address"> 
-                М.П.
-            </span>
+            <span id="number">0xFF + 0xA</span>
+            <span id="address">615b</span>
         </h1>
+
+        <script>
+            const original = [...'0xFF + 0xA'];
+            const word     = [...'DZHAGOR'];
+            const colors   = ['#e63946', '#f4a261', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#e91e63'];
+            const number   = document.getElementById('number');
+            const flash    = document.getElementById('flash');
+
+            let offset        = 0;
+            let chars         = [...original];
+            let activated     = new Set(); // indices that have switched to colorful
+            let colorInterval = null;
+            let cursorPos     = -1;
+            let cursorOn      = true;
+            let cursorBlink   = null;
+
+            function startCursorBlink() {
+                cursorBlink = setInterval(() => {
+                    cursorOn = !cursorOn;
+                    renderChars();
+                }, 500);
+            }
+
+            function stopCursorBlink() {
+                clearInterval(cursorBlink);
+                cursorBlink = null;
+                cursorOn = true;
+            }
+
+            function shuffle(arr) {
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
+            }
+
+            function renderChars() {
+                number.innerHTML = chars.map((ch, i) => {
+                    const hasCursor = cursorOn && i === cursorPos;
+                    if (ch === null) {
+                        return hasCursor
+                            ? `<span style="color:transparent;font-size:1em;font-weight:400;background:#000">&nbsp;</span>`
+                            : `<span style="color:transparent;font-size:1em;font-weight:400">&nbsp;</span>`;
+                    }
+                    const color = activated.has(i) ? colors[Math.floor(Math.random() * colors.length)] : '#000000';
+                    const display = ch === ' ' ? '&nbsp;' : ch;
+                    return hasCursor
+                        ? `<span style="color:#fff;background:#000;font-size:1em;font-weight:400">${display}</span>`
+                        : `<span style="color:${color};font-size:1em;font-weight:400">${display}</span>`;
+                }).join('');
+            }
+
+            function startColorPhase() {
+                // Shuffle the indices of non-space chars, activate one by one randomly
+                const indices = shuffle(original.map((ch, i) => i).filter(i => original[i] !== ' '));
+                let a = 0;
+                const activateInterval = setInterval(() => {
+                    if (a < indices.length) {
+                        activated.add(indices[a++]);
+                    } else {
+                        clearInterval(activateInterval);
+                    }
+                }, 500);
+
+                // Color cycling runs independently
+                renderChars();
+                colorInterval = setInterval(() => {
+                    renderChars();
+                }, 700);
+            }
+
+            function flashBackground(onComplete) {
+                flash.style.opacity = '1';
+                setTimeout(() => {
+                    flash.style.opacity = '0';
+                    setTimeout(onComplete, 400);
+                }, 400);
+            }
+
+            function startReveal() {
+                // Stop color cycling so cursor appears on plain black text
+                clearInterval(colorInterval);
+                activated.clear();
+
+                // Cursor appears at position 0 and blinks
+                cursorPos = 0;
+                cursorOn = true;
+                startCursorBlink();
+                renderChars();
+
+                // Phase 1: sweep cursor from position 0 to last position (no changes yet)
+                setTimeout(() => {
+                    let sweepPos = 0;
+                    const sweepInterval = setInterval(() => {
+                        sweepPos++;
+                        if (sweepPos < word.length) {
+                            cursorPos = sweepPos;
+                            cursorOn = true;
+                            renderChars();
+                        } else {
+                            clearInterval(sweepInterval);
+                            // Brief pause at the end, then jump back to 0 and type
+                            setTimeout(() => {
+                                cursorPos = 0;
+                                cursorOn = true;
+                                renderChars();
+                                // Phase 2: type letters one by one
+                                let i = 0;
+                                const revealInterval = setInterval(() => {
+                                    if (i < word.length) {
+                                        chars[i] = word[i];
+                                        cursorOn = true;
+                                        i++;
+                                        cursorPos = i < chars.length ? i : -1;
+                                        renderChars();
+                                    } else {
+                                        clearInterval(revealInterval);
+                                        stopCursorBlink();
+                                        cursorPos = -1;
+                                        renderChars();
+                                    }
+                                }, 600);
+                            }, 600);
+                        }
+                    }, 500);
+                }, 800);
+            }
+
+            // Sequence:
+            // 0s   — static hex text
+            // 2s   — hex chars start blinking with colors
+            // 5s   — background flash, then DZHAGOR reveals letter by letter
+            setTimeout(startColorPhase, 2000);
+            setTimeout(() => flashBackground(startReveal), 7000);
+        </script>
     </body>
 </html>

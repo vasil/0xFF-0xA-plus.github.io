@@ -61,7 +61,10 @@ h1 span#address {
     margin-top: 0.3em;
     text-align: center;
     font-weight: 400;
-    font-family: sans-serif;
+    font-family: "WiredMono";
     font-size: 1em;
-    text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+    color: #000;
+    background-color: rgba(255, 255, 255, 0.5);
+    position: relative;
+    z-index: 1;
 }
