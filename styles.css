@@ -2,10 +2,10 @@
 * {
     margin: 0;
     padding: 0;
-    /* user-select: none !important; */
 }
 
 body {
+    min-height: 100vh;
     background-image: url(images/invert.jpeg);
     background-repeat: repeat;
     background-size: 33%;
@@ -40,6 +40,12 @@ body {
     src: url(fonts/WiredMono-Light.woff2) format("woff2")
 }
 
+#main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 h1 * {
     font-size: 2em;
     color: #000;
@@ -56,15 +62,10 @@ h1 span#number {
     font-weight: 700;
 }
 
-h1 span#address {
-    display: block;
-    margin-top: 0.3em;
-    text-align: center;
-    font-weight: 400;
+#address {
+    margin-top: 0.5em;
     font-family: "WiredMono";
-    font-size: 1em;
+    font-weight: 400;
+    font-size: 1rem;
     color: #000;
-    background-color: rgba(255, 255, 255, 0.5);
-    position: relative;
-    z-index: 1;
 }
